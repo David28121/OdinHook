@@ -12,7 +12,6 @@ import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.impl.dungeon.LeapMenu
 import com.odtheking.odin.features.impl.dungeon.LeapMenu.odinSorting
 import com.odtheking.odin.features.impl.dungeon.Mimic
-import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.utils.network.WebUtils.hasBonusPaulScore
 import com.odtheking.odin.utils.noControlCodes
 import com.odtheking.odin.utils.romanToInt
@@ -69,10 +68,7 @@ object DungeonListener {
         }
 
         on<RoomEnterEvent> (EventPriority.HIGH) {
-            val roomName = room?.data?.name ?: return@on
-            AutoRouteManager.selectRouteForRoom(roomName)
-
-            val room = room.takeUnless { room -> passedRooms.any { it.data.name == room.data.name } } ?: return@on
+            val room = room?.takeUnless { room -> passedRooms.any { it.data.name == room.data.name } } ?: return@on
             dungeonStats.knownSecrets += room.data.secrets
         }
 
