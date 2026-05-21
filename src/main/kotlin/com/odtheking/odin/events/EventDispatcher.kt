@@ -3,6 +3,7 @@ package com.odtheking.odin.events
 import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.events.core.onSend
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.utils.ChatManager
 import com.odtheking.odin.utils.containsOneOf
 import com.odtheking.odin.utils.equalsOneOf

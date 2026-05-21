@@ -10,6 +10,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.CustomData
@@ -110,3 +111,12 @@ fun ItemStack.hasGlint(): Boolean =
 
 fun EquipmentSlot.isItem(itemId: String): Boolean =
     mc.player?.getItemBySlot(this)?.itemId == itemId
+
+
+fun getSlotForSkyblockId(player: Player, skyblockId: String): Int? {
+    for (i in 0..40) {  // 0-8 hotbar, 9-35 inventory, 36-39 armor, 40 offhand
+        val stack = player.inventory.getItem(i)
+        if (stack.itemId == skyblockId) return i
+    }
+    return null
+}
