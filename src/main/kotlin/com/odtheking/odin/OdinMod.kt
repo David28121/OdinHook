@@ -4,6 +4,9 @@ import com.odtheking.odin.commands.*
 import com.odtheking.odin.events.EventDispatcher
 import com.odtheking.odin.events.core.EventBus
 import com.odtheking.odin.features.ModuleManager
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp
 import com.odtheking.odin.features.impl.render.Shenanigans
 import com.odtheking.odin.utils.IrisCompatability
 import com.odtheking.odin.utils.ServerUtils
@@ -65,7 +68,7 @@ object OdinMod : ClientModInitializer {
             arrayOf(
                 mainCommand, petCommand, devCommand, waypointCommand,
                 soopyCommand, termSimCommand, posMsgCommand,
-                dungeonWaypointsCommand, cataCommand
+                dungeonWaypointsCommand, cataCommand, autoRoutesCommand
             ).forEach { commodore -> commodore.register(dispatcher) }
         }
 
@@ -75,7 +78,7 @@ object OdinMod : ClientModInitializer {
             DungeonListener, PartyUtils, TerminalUtils,
             ScanUtils, DungeonUtils, SplitsManager,
             IrisCompatability, RenderBatchManager,
-            ModuleManager, CustomGUIImpl, Shenanigans
+            ModuleManager, CustomGUIImpl, Shenanigans, HandleEtherwarp, AutoRoutes, AutoRouteManager.init()
         ).forEach { EventBus.subscribe(it) }
 
         SpecialGuiElementRegistry.register { context ->
