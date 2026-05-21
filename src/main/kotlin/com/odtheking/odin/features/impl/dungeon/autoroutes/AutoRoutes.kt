@@ -1,5 +1,6 @@
 package com.odtheking.odin.features.impl.dungeon.autoroutes
 
+import com.odtheking.mixin.accessors.KeyMappingAccessor
 import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.ColorSetting
@@ -9,15 +10,19 @@ import com.odtheking.odin.clickgui.settings.impl.NumberSetting
 import com.odtheking.odin.events.RenderEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker.renderDungeonbreaker
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp.renderEtherwarp
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStartingPoint
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStartingPoint.renderStartingPoint
 import com.odtheking.odin.utils.Colors
+import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.sendCommand
 import com.odtheking.odin.utils.setCrouchState
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
+import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
 object AutoRoutes : Module(
@@ -26,7 +31,7 @@ object AutoRoutes : Module(
 ){
     var rotationSpeed by NumberSetting("Rotation Speed", 180.0, 0.0, 720.0, 0.1, "Rotation speed of Auto Routes. Degrees per Second.")
     var rotationVary by NumberSetting("Rotation Vary", 0.0, 0.0, 30.0, 0.1, "How vary rotation speed is.")
-    var renderNodesThroughWalls by BooleanSetting("Depth Check", true, "Should Nodes render through Walls.")
+    var renderNodesThroughWalls by BooleanSetting("Depth Check", true, "To lazy to inverse off means renders through walls on means it doesn't.")
 
     private val nodeSettings by DropdownSetting("Node Settings")
 
@@ -69,14 +74,16 @@ object AutoRoutes : Module(
     var batNodeKeybind by KeybindSetting("Bat", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Bat node.").withDependency { nodeSettings && nodePlaceKeybind }
     var specialNodeKeybind by KeybindSetting("Special", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Special node.").withDependency { nodeSettings && nodePlaceKeybind }
     var etherwarpNodeKeybind by KeybindSetting("Etherwarp", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place an Etherwarp node.").withDependency { nodeSettings && nodePlaceKeybind }
-        .onPress { sendCommand("/odinhook ar etherwarp") }
+        .onPress { sendCommand("ar etherwarp") }
     var dungeonbreakerNodeKeybind by KeybindSetting("Dungeonbreaker", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Dungeonbreaker node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar dungeonbreaker") }
     var superboomNodeKeybind by KeybindSetting("Superboom", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Superboom node.").withDependency { nodeSettings && nodePlaceKeybind }
     var movementNodeKeybind by KeybindSetting("Movement", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Movement node.").withDependency { nodeSettings && nodePlaceKeybind }
     var stopMovementNodeKeybind by KeybindSetting("Stop Movement", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Stop Movement node.").withDependency { nodeSettings && nodePlaceKeybind }
     var rotateNodeKeybind by KeybindSetting("Rotate", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Rotate node.").withDependency { nodeSettings && nodePlaceKeybind }
     var startingPointNodeKeybind by KeybindSetting("Starting Point", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Starting Point.").withDependency { nodeSettings && nodePlaceKeybind }
-
+    var undoNodeKeybind by KeybindSetting("Undo", GLFW.GLFW_KEY_UNKNOWN, "Keybind to undo last placed Node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar undo") }
     var etherwarpNodeRenderLines by BooleanSetting("Etherwarp Lines", true, "Whether to render lines to Etherwarp Nodes").withDependency { nodeSettings }
 
 
@@ -88,12 +95,14 @@ object AutoRoutes : Module(
             val room = DungeonUtils.currentRoom ?: return@on
             renderStartingPoint(room, this)
             renderEtherwarp(room, this)
+            renderDungeonbreaker(room, this)
 
             when (routeState) {
                 RouteState.IDLE -> {
                     if (HandleStartingPoint.checkAndActivate(room)) {
                         routeState = RouteState.WAITING
                         currentStepIndex = 0
+                        modMessage("Route Started")
                     }
                 }
                 RouteState.WAITING -> {
@@ -105,19 +114,20 @@ object AutoRoutes : Module(
                     val now = System.currentTimeMillis()
                     when (route?.steps?.getOrNull(currentStepIndex)) {
                         is RouteStep.Etherwarp -> HandleEtherwarp.tick(now)
+                        is RouteStep.BreakBlock -> HandleDungeonbreaker.tick(now)
                         else -> {}
                     }
                 }
                 RouteState.COMPLETE -> {
                     routeState = RouteState.IDLE
                     currentStepIndex = 0
-                    println("Route Completed!")
+                    modMessage("Route Completed!")
                     setCrouchState(false)
                 }
                 RouteState.FAILED -> {
                     routeState = RouteState.IDLE
                     currentStepIndex = 0
-                    println("Route Failed!")
+                    modMessage("Route Failed!")
                     setCrouchState(false)
                 }
             }
@@ -138,6 +148,17 @@ object AutoRoutes : Module(
             is RouteStep.Etherwarp -> HandleEtherwarp.execute(step, room, this,
                 onSuccess = { setCrouchState(false); advance(room) },
                 onFail = { setCrouchState(false); fail() }
+            )
+            is RouteStep.BreakBlock -> HandleDungeonbreaker.execute(step, room, this,
+                onSuccess = {
+                    val nextIsBreakBlock = currentStepIndex + 1 < steps.size && steps[currentStepIndex + 1] is RouteStep.BreakBlock
+                    if (!nextIsBreakBlock) KeyMapping.set((mc.options.keyAttack as KeyMappingAccessor).key, false)
+                    advance(room)
+                },
+                onFail = {
+                    KeyMapping.set((mc.options.keyAttack as KeyMappingAccessor).key, false)
+                    fail()
+                }
             )
             else -> {}
         }

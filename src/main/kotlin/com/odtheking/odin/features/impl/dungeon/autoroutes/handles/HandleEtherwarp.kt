@@ -87,10 +87,10 @@ object HandleEtherwarp : HandleAction() {
         val deltaTime = now - lastFrameTimestamp
         lastFrameTimestamp = now
 
-        val worldFace = rotateFaceFromNorth(step.face, room.rotation)
-        val faceOffset = getFaceOffset(worldFace)
-
         val coord = step.target.toWorldPos(room)
+        val worldFace = rotateFaceFromNorth(step.face, room.rotation)
+        val faceOffset = getFaceOffset(worldFace, coord, true)
+
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
 
         val player = mc.player ?: return
@@ -133,7 +133,6 @@ object HandleEtherwarp : HandleAction() {
             }
         }
 
-        // saved routes — lines between etherwarp nodes
         AutoRouteManager.currentRoute?.let { route ->
             val nodes = mutableListOf<BlockPos>()
             nodes.add(route.startingPoint.toWorldPos(room))
@@ -141,11 +140,10 @@ object HandleEtherwarp : HandleAction() {
                 nodes.add(step.target.toWorldPos(room))
             }
 
-            // draw box at each node
             nodes.forEach { world ->
                 val aabb = AABB(
-                    world.x.toDouble() - 0.01, world.y.toDouble() - 0.01, world.z.toDouble() - 0.01,
-                    world.x + 1.01, world.y + 1.01, world.z + 1.01
+                    world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
+                    world.x + 1.0, world.y + 1.0, world.z + 1.0
                 )
                 event.drawStyledBox(
                     aabb,
@@ -171,12 +169,11 @@ object HandleEtherwarp : HandleAction() {
             }
         }
 
-        // authoring boxes (starting point handled in HandleStartingPoint)
         AutoRouteManager.getAuthoringSteps().filterIsInstance<RouteStep.Etherwarp>().forEach { step ->
             val world = step.target.toWorldPos(room)
             val aabb = AABB(
-                world.x.toDouble() - 0.01, world.y.toDouble() - 0.01, world.z.toDouble() - 0.01,
-                world.x + 1.01, world.y + 1.01, world.z + 1.01
+                world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
+                world.x + 1.0, world.y + 1.0, world.z + 1.0
             )
             event.drawStyledBox(
                 aabb,

@@ -6,6 +6,7 @@ import com.odtheking.odin.events.core.EventBus
 import com.odtheking.odin.features.ModuleManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp
 import com.odtheking.odin.features.impl.render.Shenanigans
 import com.odtheking.odin.utils.IrisCompatability
@@ -78,7 +79,8 @@ object OdinMod : ClientModInitializer {
             DungeonListener, PartyUtils, TerminalUtils,
             ScanUtils, DungeonUtils, SplitsManager,
             IrisCompatability, RenderBatchManager,
-            ModuleManager, CustomGUIImpl, Shenanigans, HandleEtherwarp, AutoRoutes, AutoRouteManager.init()
+            ModuleManager, CustomGUIImpl, Shenanigans, HandleEtherwarp, AutoRoutes, AutoRouteManager.init(),
+            HandleDungeonbreaker
         ).forEach { EventBus.subscribe(it) }
 
         SpecialGuiElementRegistry.register { context ->

@@ -1,11 +1,15 @@
 package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 
+import com.odtheking.odin.OdinMod.mc
+import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.SlabBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.SlabType
 
-fun SlabBlockFaceOffsets(face: String, state: BlockState): Triple<Double, Double, Double> {
-    val half = state.getValue(SlabBlock.TYPE)
+fun SlabBlockFaceOffsets(face: String, pos: BlockPos): Triple<Double, Double, Double> {
+    val level = mc.level
+    val state = level?.getBlockState(pos)
+    val half = state?.getValue(SlabBlock.TYPE)
     return when (half) {
         SlabType.TOP -> when (face) {
             "NORTH" -> Triple(0.5, 0.75, 0.0)

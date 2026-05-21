@@ -8,6 +8,7 @@ import com.odtheking.odin.features.impl.render.Etherwarp.getEtherPos
 import com.odtheking.odin.utils.modMessage
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.HitResult
 
 val autoRoutesCommand = Commodore("ar", "autoroutes") {
     runs {
@@ -26,6 +27,11 @@ val autoRoutesCommand = Commodore("ar", "autoroutes") {
         modMessage("Route Saved")
     }
 
+    literal("undo").runs {
+        AutoRouteManager.undoLastStep()
+        modMessage("Undid last step")
+    }
+
     literal("startingNode").runs {
         val player = mc.player?: return@runs
         val pos = BlockPos(player.blockX, player.blockY - 1, player.blockZ)
@@ -34,6 +40,11 @@ val autoRoutesCommand = Commodore("ar", "autoroutes") {
     }
 
     literal("etherwarp").runs {
+
+        if (AutoRouteManager.getAuthoringStartingPoint() == null) {
+            modMessage("Set a starting point first")
+            return@runs
+        }
 
         val player = mc.player?: return@runs
         val level = mc.level?: return@runs
@@ -44,7 +55,7 @@ val autoRoutesCommand = Commodore("ar", "autoroutes") {
             etherWarp = true
         )
 
-        if (!etherPos.succeeded) modMessage("Invalid Etherwarp block")
+        if (!etherPos.succeeded) {modMessage("Invalid Etherwarp block") ; return@runs}
 
         val hit = level.clip(
             ClipContext(
@@ -57,6 +68,35 @@ val autoRoutesCommand = Commodore("ar", "autoroutes") {
         )
 
         AutoRouteManager.addStepWithFace(etherPos.pos, hit.direction.name, RouteStep::Etherwarp)
-        modMessage("Etherwarp Node placed: ${etherPos.pos?.x}, ${etherPos.pos?.y}, ${etherPos.pos?.z} ")
+        modMessage("Etherwarp Node placed: ${etherPos.pos?.x}, ${etherPos.pos?.y}, ${etherPos.pos?.z}, Face: ${hit.direction.name} ")
+    }
+
+    literal("dungeonbreaker").runs {
+
+        if (AutoRouteManager.getAuthoringStartingPoint() == null) {
+            modMessage("Set a starting point first")
+            return@runs
+        }
+
+        val player = mc.player ?: return@runs
+        val level = mc.level ?: return@runs
+
+        val hit = level.clip(
+            ClipContext(
+                player.getEyePosition(1f),
+                player.getEyePosition(1f).add(player.lookAngle.scale(5.0)),
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                player
+            )
+        )
+
+        if (hit.type == HitResult.Type.MISS) {
+            modMessage("Not looking at a block")
+            return@runs
+        }
+
+        AutoRouteManager.addStepWithFace(hit.blockPos, hit.direction.name, RouteStep::BreakBlock)
+        modMessage("Dungeonbreaker Node placed: ${hit.blockPos?.x}, ${hit.blockPos?.y}, ${hit.blockPos?.z}, Face: ${hit.direction.name} ")
     }
 }

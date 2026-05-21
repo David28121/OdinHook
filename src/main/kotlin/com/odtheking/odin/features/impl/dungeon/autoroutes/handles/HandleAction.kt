@@ -2,6 +2,7 @@ package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 
 import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.utils.blockDeadzoneToAngle
 import com.odtheking.odin.utils.getAnglesToTarget
 import com.odtheking.odin.utils.getSlotForSkyblockId
@@ -58,7 +59,7 @@ abstract class HandleAction {
         module: AutoRoutes,
         deltaTime: Long
     ): Boolean {
-        // returns true if within deadzone
+
         val (deltaYaw, deltaPitch) = getAnglesToTarget(tx, ty, tz)
         val player = mc.player ?: return false
         val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
@@ -98,16 +99,47 @@ abstract class HandleAction {
         return Vec3(tx, ty, tz)
     }
 
-    protected fun getFaceOffset(face: String): Triple<Double, Double, Double> =
-        when (face) {
-            "NORTH" -> Triple(0.5, 0.5, 0.0)
-            "SOUTH" -> Triple(0.5, 0.5, 1.0)
-            "EAST"  -> Triple(1.0, 0.5, 0.5)
-            "WEST"  -> Triple(0.0, 0.5, 0.5)
-            "UP"    -> Triple(0.5, 1.0, 0.5)
-            "DOWN"  -> Triple(0.5, 0.0, 0.5)
-            else    -> Triple(0.5, 0.5, 0.5)
+    protected fun getFaceOffset(face: String, pos: BlockPos, etherwarp: Boolean = false): Triple<Double, Double, Double> {
+        val level = mc.level ?: return Triple(0.5, 0.5, 0.5)
+        val blockClass = level.getBlockState(pos).block.javaClass.simpleName
+        if (etherwarp) {
+            return when (blockClass) {
+                "SlabBlock" -> SlabBlockFaceOffsets(face, pos)
+                "LilyPadBlock" -> Triple(0.5, 0.1, 0.5)
+                "WoolCarpetBlock" -> Triple(0.5, 0.1, 0.5)
+                else -> when (face) {
+                    "NORTH" -> Triple(0.5, 0.5, 0.0)
+                    "SOUTH" -> Triple(0.5, 0.5, 1.0)
+                    "EAST" -> Triple(1.0, 0.5, 0.5)
+                    "WEST" -> Triple(0.0, 0.5, 0.5)
+                    "UP" -> Triple(0.5, 1.0, 0.5)
+                    "DOWN" -> Triple(0.5, 0.0, 0.5)
+                    else -> Triple(0.5, 0.5, 0.5)
+                }
+            }
         }
+        else {
+            return when (blockClass) {
+                "SlabBlock" -> SlabBlockFaceOffsets(face, pos)
+                "WallBlock" -> Triple(0.5, 0.5, 0.5)
+                "FenceBlock" -> Triple(0.5, 0.5, 0.5)
+                "IronBarsBlock" -> Triple(0.5, 0.5, 0.5)
+                "LilyPadBlock" -> Triple(0.5, 0.1, 0.5)
+                "WoolCarpetBlock" -> Triple(0.5, 0.1, 0.5)
+                "StairBlock" -> Triple(0.5, 0.5, 0.5)
+                else -> when (face) {
+                    "NORTH" -> Triple(0.5, 0.5, 0.0)
+                    "SOUTH" -> Triple(0.5, 0.5, 1.0)
+                    "EAST" -> Triple(1.0, 0.5, 0.5)
+                    "WEST" -> Triple(0.0, 0.5, 0.5)
+                    "UP" -> Triple(0.5, 1.0, 0.5)
+                    "DOWN" -> Triple(0.5, 0.0, 0.5)
+                    else -> Triple(0.5, 0.5, 0.5)
+                }
+            }
+        }
+    }
+
 
     protected fun holdItem(skyblockItem: String): Boolean {
         val player = mc.player ?: return false

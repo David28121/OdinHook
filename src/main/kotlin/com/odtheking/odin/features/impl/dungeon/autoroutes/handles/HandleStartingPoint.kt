@@ -13,7 +13,6 @@ object HandleStartingPoint {
     fun AutoRoutes.renderStartingPoint(room: Room, event: RenderEvent.Extract) {
         val throughWalls = startingPointRenderFilled
 
-        // authoring starting point — green
         AutoRouteManager.getAuthoringStartingPoint()?.let { node ->
             val world = node.toWorldPos(room)
             val aabb = AABB(
@@ -23,7 +22,6 @@ object HandleStartingPoint {
             event.drawStyledBox(aabb, authoringNodesColor, if (startingPointRenderFilled) 0 else 1, renderNodesThroughWalls)
         }
 
-        // active route starting point — blue
         AutoRouteManager.currentRoute?.let { route ->
             val world = route.startingPoint.toWorldPos(room)
             val aabb = AABB(

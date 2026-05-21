@@ -30,15 +30,9 @@ object AutoRouteManager {
     private val routeFile: File by lazy {
         FabricLoader.getInstance().configDir.resolve("teoh/autoroutes.json").toFile()
     }
-
-    // roomName -> list of authored routes
     private val routes = mutableMapOf<String, MutableList<RoomRoute>>()
-
-    // currently active route for this room visit
     var currentRoute: RoomRoute? = null
         private set
-
-    // route being authored right now via command
     private var authoringStartingPoint: RouteNode? = null
     private val authoringSteps = mutableListOf<RouteStep>()
 
@@ -120,11 +114,11 @@ object AutoRouteManager {
 
     fun selectRouteForRoom(roomName: String) {
         val roomRoutes = routes[roomName] ?: run {
-            currentRoute = null  // clear stale route
+            currentRoute = null
             return
         }
         if (roomRoutes.isEmpty()) {
-            currentRoute = null  // clear stale route
+            currentRoute = null
             return
         }
         currentRoute = roomRoutes.random()
@@ -138,7 +132,6 @@ object AutoRouteManager {
         if (authoringSteps.isNotEmpty()) {
             authoringSteps.removeLastOrNull()
         } else {
-            // no steps left, undo the starting point
             authoringStartingPoint = null
         }
     }
