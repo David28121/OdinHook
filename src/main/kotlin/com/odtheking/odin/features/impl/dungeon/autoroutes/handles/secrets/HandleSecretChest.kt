@@ -1,58 +1,56 @@
-package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
+package com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets
 
 import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.events.RenderEvent
-import com.odtheking.odin.events.core.onReceive
+import com.odtheking.odin.events.SecretPickupEvent
+import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.utils.component1
 import com.odtheking.odin.utils.component2
 import com.odtheking.odin.utils.component3
-import com.odtheking.odin.utils.leftClick
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawStyledBox
+import com.odtheking.odin.utils.rightClick
+import com.odtheking.odin.utils.setCrouchState
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
-import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.AABB
 
-object HandleSuperboom : HandleAction() {
+object HandleSecretChest : HandleAction() {
 
-    private var currentStep: RouteStep.Superboom? = null
+    private var currentStep: RouteStep.SecretChest? = null
 
     fun execute(
-        step: RouteStep.Superboom,
+        step: RouteStep.SecretChest,
         room: Room,
         module: AutoRoutes,
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
 
-        modMessage("Superboom Node")
+        modMessage("Chest Node")
 
         currentStep = step
         val coord = step.target.toWorldPos(room)
-        val level = mc.level
-
-        if (level?.getBlockState(coord)?.isAir == true) {
-            onSuccess()
-            return
-        }
 
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
     init {
-        onReceive<ClientboundBlockUpdatePacket> {
-            if (!isExecuting || !attemptedAction) return@onReceive
-            val step = currentStep ?: return@onReceive
-            val room = currentRoom ?: return@onReceive
+        on<SecretPickupEvent.Interact> {
+            if (!isExecuting || !attemptedAction) return@on
+            val step = currentStep ?: return@on
+            val room = currentRoom ?: return@on
             val expectedPos = step.target.toWorldPos(room)
-            if (pos.distSqr(expectedPos) <= 9 && blockState.isAir) {
+            if (blockPos == expectedPos) {
                 onSuccess()
             }
+
         }
     }
 
@@ -63,8 +61,8 @@ object HandleSuperboom : HandleAction() {
         val module = currentModule ?: return
 
         if (now - delayStartTime >= 5000L) {
-            modMessage("Superboom failed due to timeout, preventing lockup")
-            onFail()
+            modMessage("Chest timed out, skipping")
+            onSuccess()
         }
 
         val deltaTime = now - lastFrameTimestamp
@@ -75,41 +73,42 @@ object HandleSuperboom : HandleAction() {
         val faceOffset = getFaceOffset(worldFace, coord)
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-
-        if (!holdItem("SUPERBOOM_TNT")) return
+        val player = mc.player ?: return
+        if (!holdItem("DUNGEONBREAKER")) return
+        if (player.pose != Pose.CROUCHING) setCrouchState(true)
 
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
-        if (deadzone && amILookingAtTargetBlock(coord)) {
+        if (deadzone && amILookingAtTargetBlock(coord) && player.pose == Pose.CROUCHING) {
             if (!attemptedAction) {
                 attemptedAction = true
                 actionAttemptTime = now
-                leftClick()
+                rightClick()
             }
         }
     }
 
-    fun AutoRoutes.renderSuperboom(room: Room, event: RenderEvent.Extract) {
+    fun AutoRoutes.renderSecretChest(room: Room, event: RenderEvent.Extract) {
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->
-            route.steps.filterIsInstance<RouteStep.Superboom>().forEach { step ->
+            route.steps.filterIsInstance<RouteStep.SecretChest>().forEach { step ->
                 val world = step.target.toWorldPos(room)
                 val aabb = AABB(
                     world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                     world.x + 1.0, world.y + 1.0, world.z + 1.0
                 )
-                event.drawStyledBox(aabb, superboomNodeColor, if (superboomRenderFilled) 0 else 1, renderNodesThroughWalls)
+                event.drawStyledBox(aabb, chestNodeColor, if (chestNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
             }
         }
 
-        AutoRouteManager.getAuthoringSteps().filterIsInstance<RouteStep.Superboom>().forEach { step ->
+        AutoRouteManager.getAuthoringSteps().filterIsInstance<RouteStep.SecretChest>().forEach { step ->
             val world = step.target.toWorldPos(room)
             val aabb = AABB(
                 world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                 world.x + 1.0, world.y + 1.0, world.z + 1.0
             )
-            event.drawStyledBox(aabb, authoringNodesColor, if (superboomRenderFilled) 0 else 1, renderNodesThroughWalls)
+            event.drawStyledBox(aabb, authoringNodesColor, if (chestNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
         }
     }
 }

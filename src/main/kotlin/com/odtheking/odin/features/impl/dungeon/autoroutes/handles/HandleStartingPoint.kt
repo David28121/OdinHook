@@ -11,7 +11,6 @@ import net.minecraft.world.phys.AABB
 
 object HandleStartingPoint {
     fun AutoRoutes.renderStartingPoint(room: Room, event: RenderEvent.Extract) {
-        val throughWalls = startingPointRenderFilled
 
         AutoRouteManager.getAuthoringStartingPoint()?.let { node ->
             val world = node.toWorldPos(room)

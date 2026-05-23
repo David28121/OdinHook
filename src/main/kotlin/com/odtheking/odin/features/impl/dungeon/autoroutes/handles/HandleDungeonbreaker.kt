@@ -30,6 +30,9 @@ object HandleDungeonbreaker : HandleAction() {
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
+
+        modMessage("Dungeonbreaker Node")
+
         currentStep = step
         val coord = step.target.toWorldPos(room)
         val level = mc.level
@@ -96,8 +99,6 @@ object HandleDungeonbreaker : HandleAction() {
     }
 
     fun AutoRoutes.renderDungeonbreaker(room: Room, event: RenderEvent.Extract) {
-        val throughWalls = renderNodesThroughWalls
-
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->

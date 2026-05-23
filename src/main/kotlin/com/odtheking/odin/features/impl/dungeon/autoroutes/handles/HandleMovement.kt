@@ -7,6 +7,7 @@ import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
+import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
 import net.minecraft.client.KeyMapping
@@ -17,6 +18,9 @@ object HandleMovement : HandleAction() {
         private set
 
     fun execute(step: RouteStep.Movement, room: Room, module: AutoRoutes, onSuccess: () -> Unit, onFail: () -> Unit) {
+
+        modMessage("Movement Node")
+
         isMoving = true
         KeyMapping.set((mc.options.keyUp as KeyMappingAccessor).key, true)
         onSuccess()
@@ -34,8 +38,6 @@ object HandleMovement : HandleAction() {
     }
 
     fun AutoRoutes.renderMovement(room: Room, event: RenderEvent.Extract) {
-        val throughWalls = renderNodesThroughWalls
-
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->

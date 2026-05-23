@@ -25,6 +25,9 @@ object HandleRotate  : HandleAction() {
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
+
+        modMessage("Rotate Node")
+
         currentStep = step
         val coord = step.target.toWorldPos(room)
         baseExecute(room, module, coord, onSuccess, onFail)
@@ -56,8 +59,6 @@ object HandleRotate  : HandleAction() {
     }
 
     fun AutoRoutes.renderRotate(room: Room, event: RenderEvent.Extract) {
-        val throughWalls = renderNodesThroughWalls
-
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->

@@ -7,6 +7,7 @@ import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleMovement.stopMoving
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
+import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
 import net.minecraft.world.phys.AABB
@@ -21,6 +22,9 @@ object HandleStopMovement: HandleAction() {
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
+
+        modMessage("Stop Movement Node")
+
         currentStep = step
         val coord = step.target.toWorldPos(room)
         baseExecute(room, module, coord, onSuccess, onFail)
@@ -32,7 +36,7 @@ object HandleStopMovement: HandleAction() {
         val room = currentRoom ?: return
 
         if (now - delayStartTime >= 5000L) {
-            println("Stop Movement 5s timeout failing Route")
+            modMessage("Stop Movement failed due to timeout, preventing lockup")
             stopMoving()
             onFail()
             return
@@ -53,8 +57,6 @@ object HandleStopMovement: HandleAction() {
     }
 
     fun AutoRoutes.renderStopMovement(room: Room, event: RenderEvent.Extract) {
-        val throughWalls = renderNodesThroughWalls
-
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->

@@ -6,6 +6,7 @@ import com.odtheking.odin.utils.blockDeadzoneToAngle
 import com.odtheking.odin.utils.getAnglesToTarget
 import com.odtheking.odin.utils.getSlotForSkyblockId
 import com.odtheking.odin.utils.getStepSize
+import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ClipContext
@@ -37,6 +38,7 @@ abstract class HandleAction {
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
+        attemptedAction = false
         isExecuting = true
         delayStartTime = System.currentTimeMillis()
         lastFrameTimestamp = System.currentTimeMillis()
@@ -56,10 +58,11 @@ abstract class HandleAction {
     protected fun rotateToward(
         tx: Double, ty: Double, tz: Double,
         module: AutoRoutes,
-        deltaTime: Long
+        deltaTime: Long,
     ): Boolean {
 
         val (deltaYaw, deltaPitch) = getAnglesToTarget(tx, ty, tz)
+
         val player = mc.player ?: return false
         val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val eyePos = player.getEyePosition(partialTick)
@@ -98,7 +101,7 @@ abstract class HandleAction {
         return Vec3(tx, ty, tz)
     }
 
-    protected fun getFaceOffset(face: String, pos: BlockPos, etherwarp: Boolean = false): Triple<Double, Double, Double> {
+    protected fun getFaceOffset(face: String = "UP", pos: BlockPos, etherwarp: Boolean = false): Triple<Double, Double, Double> {
         val level = mc.level ?: return Triple(0.5, 0.5, 0.5)
         val blockClass = level.getBlockState(pos).block.javaClass.simpleName
         if (etherwarp) {
@@ -120,6 +123,9 @@ abstract class HandleAction {
         else {
             return when (blockClass) {
                 "SlabBlock" -> SlabBlockFaceOffsets(face, pos)
+                "LeverBlock" -> LeverBlockFaceOffsets(pos) // no face for reasons explained above the function
+                "PlayerHeadBlock" -> SkullBlockFaceOffsets(face)
+                "ChestBlock" -> ChestBlockFaceOffsets(face)
                 "WallBlock" -> Triple(0.5, 0.5, 0.5)
                 "FenceBlock" -> Triple(0.5, 0.5, 0.5)
                 "IronBarsBlock" -> Triple(0.5, 0.5, 0.5)
@@ -156,16 +162,16 @@ abstract class HandleAction {
             ClipContext(
                 player.getEyePosition(1f),
                 player.getEyePosition(1f).add(player.lookAngle.scale(4.5)), //4.5 to account for shitty desync eventually update to use server position
-                ClipContext.Block.COLLIDER,
+                ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
                 player
             )
         )
-
         if (hit.type == HitResult.Type.MISS) {
             return false
         }
-        return (hit.blockPos == pos)
+
+        return (BlockPos(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z) == pos)
     }
 
     protected fun onSuccess() {

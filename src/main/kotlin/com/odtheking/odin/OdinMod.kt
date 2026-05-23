@@ -9,6 +9,11 @@ import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleSuperboom
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets.HandleSecretBat
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets.HandleSecretChest
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets.HandleSecretItem
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets.HandleSecretLever
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.secrets.HandleSecretSpecial
 import com.odtheking.odin.features.impl.render.Shenanigans
 import com.odtheking.odin.utils.IrisCompatability
 import com.odtheking.odin.utils.ServerUtils
@@ -81,7 +86,8 @@ object OdinMod : ClientModInitializer {
             ScanUtils, DungeonUtils, SplitsManager,
             IrisCompatability, RenderBatchManager,
             ModuleManager, CustomGUIImpl, Shenanigans, HandleEtherwarp, AutoRoutes, AutoRouteManager.init(),
-            HandleDungeonbreaker, HandleSuperboom
+            HandleDungeonbreaker, HandleSuperboom, HandleSecretBat, HandleSecretItem, HandleSecretSpecial,
+            HandleSecretLever, HandleSecretChest
         ).forEach { EventBus.subscribe(it) }
 
         SpecialGuiElementRegistry.register { context ->

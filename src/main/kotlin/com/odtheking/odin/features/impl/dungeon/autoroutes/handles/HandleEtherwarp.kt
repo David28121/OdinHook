@@ -13,6 +13,7 @@ import com.odtheking.odin.features.impl.render.Etherwarp.getEtherPos
 import com.odtheking.odin.utils.component1
 import com.odtheking.odin.utils.component2
 import com.odtheking.odin.utils.component3
+import com.odtheking.odin.utils.getPositionString
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawLine
 import com.odtheking.odin.utils.render.drawStyledBox
@@ -39,6 +40,9 @@ object HandleEtherwarp : HandleAction() {
         onSuccess: () -> Unit,
         onFail: () -> Unit
     ) {
+
+        modMessage("Etherwarp Node")
+
         currentStep = step
         val coord = step.target.toWorldPos(room)
 
@@ -67,8 +71,8 @@ object HandleEtherwarp : HandleAction() {
             val zAbsolute = !relatives.contains(Relative.Z)
 
             if (xAbsolute && yAbsolute && zAbsolute) {
-                if (pos.distanceTo(expected.center) < 1.25) onSuccess()
-                else onFail()
+                if (pos.distanceTo(expected.center) < 1.5) onSuccess()
+                else {modMessage("Etherwarp Failed") ; onFail()}
             }
         }
     }
@@ -99,16 +103,14 @@ object HandleEtherwarp : HandleAction() {
 
         if (player.pose != Pose.CROUCHING) setCrouchState(true)
 
-        rotateToward(tx, ty, tz, module, deltaTime)
+        // -0.27 is to account for shitty 1.14+ crouch height and aiming cause im lazy
+        val deadzone = rotateToward(tx, ty - 0.27, tz, module, deltaTime)
 
-        etherPos = getEtherPos(
-            mc.player?.oldPosition(),
-            63.0,
-            etherWarp = true
-        )
+        if (!attemptedAction) etherPos = getEtherPos(mc.player?.oldPosition(), 63.0, etherWarp = true)
 
-        if (etherPos?.pos == coord && etherPos?.succeeded == true) {
+        if (deadzone && (etherPos?.pos == coord) && (etherPos?.succeeded == true) && (player.pose == Pose.CROUCHING)) {
             if (!attemptedAction) {
+                modMessage("Attempted Etherwarp")
                 attemptedAction = true
                 actionAttemptTime = now
                 rightClick()
@@ -116,6 +118,9 @@ object HandleEtherwarp : HandleAction() {
         }
     }
 
+    // too lazy to clean up but i stopped setting a val to the through walls and
+    // just used the var directly cause i refractored render method from the original
+    // code to work directly in odin's codebase i be it very scuffed
     fun AutoRoutes.renderEtherwarp(room: Room, event: RenderEvent.Extract) {
         val throughWalls = renderNodesThroughWalls
 
