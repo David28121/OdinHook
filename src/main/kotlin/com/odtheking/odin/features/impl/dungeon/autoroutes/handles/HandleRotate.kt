@@ -1,9 +1,6 @@
 package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 
-import com.odtheking.mixin.accessors.KeyMappingAccessor
-import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.events.RenderEvent
-import com.odtheking.odin.events.core.onSend
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
@@ -15,16 +12,14 @@ import com.odtheking.odin.utils.component3
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
-import net.minecraft.client.KeyMapping
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.phys.AABB
 
-object HandleDungeonbreaker : HandleAction() {
+object HandleRotate  : HandleAction() {
 
-    private var currentStep: RouteStep.BreakBlock? = null
+    private var currentStep: RouteStep.RotateTo? = null
 
     fun execute(
-        step: RouteStep.BreakBlock,
+        step: RouteStep.RotateTo,
         room: Room,
         module: AutoRoutes,
         onSuccess: () -> Unit,
@@ -32,32 +27,7 @@ object HandleDungeonbreaker : HandleAction() {
     ) {
         currentStep = step
         val coord = step.target.toWorldPos(room)
-        val level = mc.level
-
-        if (level?.getBlockState(coord)?.isAir == true) {
-            onSuccess()
-            return
-        }
-
         baseExecute(room, module, coord, onSuccess, onFail)
-    }
-
-    init {
-        onSend<ServerboundPlayerActionPacket> {
-            if (!isExecuting) return@onSend
-            val step = currentStep ?: return@onSend
-            val room = currentRoom ?: return@onSend
-
-            val expectedPos = step.target.toWorldPos(room)
-
-            if (action == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK
-                && pos == expectedPos) {
-
-                println("Block Broken")
-
-                onSuccess()
-            }
-        }
     }
 
     fun tick(now: Long) {
@@ -67,7 +37,7 @@ object HandleDungeonbreaker : HandleAction() {
         val module = currentModule ?: return
 
         if (now - delayStartTime >= 5000L) {
-            modMessage("Dungeonbreaker failed due to timeout, preventing lockup")
+            modMessage("Rotate failed due to timeout, preventing lockup")
             onFail()
         }
 
@@ -76,48 +46,48 @@ object HandleDungeonbreaker : HandleAction() {
 
         val coord = step.target.toWorldPos(room)
         val worldFace = rotateFaceFromNorth(step.face, room.rotation)
-        val faceOffset = getFaceOffset(worldFace, coord)
-
+        val faceOffset = getFaceOffset(worldFace, coord, true)
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-
-        if (!holdItem("DUNGEONBREAKER")) return
-
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
-        if (deadzone && amILookingAtTargetBlock(coord)) {
-            if (!attemptedAction) {
-                attemptedAction = true
-                actionAttemptTime = now
-                val options = mc.options ?: return
-                val key = (options.keyAttack as KeyMappingAccessor).key
-                KeyMapping.set(key, true)
-            }
+        if (deadzone) {
+            onSuccess()
         }
     }
 
-    fun AutoRoutes.renderDungeonbreaker(room: Room, event: RenderEvent.Extract) {
+    fun AutoRoutes.renderRotate(room: Room, event: RenderEvent.Extract) {
         val throughWalls = renderNodesThroughWalls
 
         //if node is in a currently edited route
 
         AutoRouteManager.currentRoute?.let { route ->
-            route.steps.filterIsInstance<RouteStep.BreakBlock>().forEach { step ->
+            route.steps.filterIsInstance<RouteStep.RotateTo>().forEach { step ->
                 val world = step.target.toWorldPos(room)
                 val aabb = AABB(
                     world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                     world.x + 1.0, world.y + 1.0, world.z + 1.0
                 )
-                event.drawStyledBox(aabb, dungeonbreakerNodeColor, if (dungeonbreakerNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
+                event.drawStyledBox(
+                    aabb,
+                    rotateNodeColor,
+                    if (rotateRenderFilled) 0 else 1,
+                    renderNodesThroughWalls
+                )
             }
         }
 
-        AutoRouteManager.getAuthoringSteps().filterIsInstance<RouteStep.BreakBlock>().forEach { step ->
+        AutoRouteManager.getAuthoringSteps().filterIsInstance<RouteStep.RotateTo>().forEach { step ->
             val world = step.target.toWorldPos(room)
             val aabb = AABB(
                 world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                 world.x + 1.0, world.y + 1.0, world.z + 1.0
             )
-            event.drawStyledBox(aabb, authoringNodesColor, if (dungeonbreakerNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
+            event.drawStyledBox(
+                aabb,
+                authoringNodesColor,
+                if (rotateRenderFilled) 0 else 1,
+                renderNodesThroughWalls
+            )
         }
     }
 }

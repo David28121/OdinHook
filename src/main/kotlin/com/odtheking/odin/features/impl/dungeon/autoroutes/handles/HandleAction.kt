@@ -2,7 +2,6 @@ package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 
 import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
-import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.utils.blockDeadzoneToAngle
 import com.odtheking.odin.utils.getAnglesToTarget
 import com.odtheking.odin.utils.getSlotForSkyblockId
@@ -106,7 +105,7 @@ abstract class HandleAction {
             return when (blockClass) {
                 "SlabBlock" -> SlabBlockFaceOffsets(face, pos)
                 "LilyPadBlock" -> Triple(0.5, 0.1, 0.5)
-                "WoolCarpetBlock" -> Triple(0.5, 0.1, 0.5)
+                "WoolCarpetBlock" -> Triple(0.5, 0.1, 0.5) //questionable methods ik
                 else -> when (face) {
                     "NORTH" -> Triple(0.5, 0.5, 0.0)
                     "SOUTH" -> Triple(0.5, 0.5, 1.0)

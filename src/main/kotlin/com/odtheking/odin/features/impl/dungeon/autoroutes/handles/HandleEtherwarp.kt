@@ -67,7 +67,7 @@ object HandleEtherwarp : HandleAction() {
             val zAbsolute = !relatives.contains(Relative.Z)
 
             if (xAbsolute && yAbsolute && zAbsolute) {
-                if (pos.distanceTo(expected.center) < 1.5) onSuccess()
+                if (pos.distanceTo(expected.center) < 1.25) onSuccess()
                 else onFail()
             }
         }

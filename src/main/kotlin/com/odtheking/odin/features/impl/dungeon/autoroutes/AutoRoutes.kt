@@ -10,12 +10,22 @@ import com.odtheking.odin.clickgui.settings.impl.NumberSetting
 import com.odtheking.odin.events.RenderEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAwait
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAwait.renderAwait
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleDungeonbreaker.renderDungeonbreaker
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleEtherwarp.renderEtherwarp
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleMovement
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleMovement.renderMovement
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleRotate
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleRotate.renderRotate
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStartingPoint
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStartingPoint.renderStartingPoint
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStopMovement
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleStopMovement.renderStopMovement
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleSuperboom
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleSuperboom.renderSuperboom
 import com.odtheking.odin.utils.Colors
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.sendCommand
@@ -68,6 +78,7 @@ object AutoRoutes : Module(
     var startingPointRenderFilled by BooleanSetting("Starting Point Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     private val nodePlaceKeybind by DropdownSetting("Place Keybinds").withDependency { nodeSettings }
     var awaitNodeKeybind by KeybindSetting(name ="Await", defaultKeyCode =  GLFW.GLFW_KEY_UNKNOWN, desc = "Keybind to place an Await node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar await") }
     var chestNodeKeybind by KeybindSetting("Chest", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Chest node.").withDependency { nodeSettings && nodePlaceKeybind }
     var leverNodeKeybind by KeybindSetting("Lever", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Lever node.").withDependency { nodeSettings && nodePlaceKeybind }
     var itemNodeKeybind by KeybindSetting("Item", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place an Item node.").withDependency { nodeSettings && nodePlaceKeybind }
@@ -78,9 +89,13 @@ object AutoRoutes : Module(
     var dungeonbreakerNodeKeybind by KeybindSetting("Dungeonbreaker", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Dungeonbreaker node.").withDependency { nodeSettings && nodePlaceKeybind }
         .onPress { sendCommand("ar dungeonbreaker") }
     var superboomNodeKeybind by KeybindSetting("Superboom", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Superboom node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar superboom") }
     var movementNodeKeybind by KeybindSetting("Movement", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Movement node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar movement") }
     var stopMovementNodeKeybind by KeybindSetting("Stop Movement", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Stop Movement node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar stopMovement") }
     var rotateNodeKeybind by KeybindSetting("Rotate", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Rotate node.").withDependency { nodeSettings && nodePlaceKeybind }
+        .onPress { sendCommand("ar rotate") }
     var startingPointNodeKeybind by KeybindSetting("Starting Point", GLFW.GLFW_KEY_UNKNOWN, "Keybind to place a Starting Point.").withDependency { nodeSettings && nodePlaceKeybind }
     var undoNodeKeybind by KeybindSetting("Undo", GLFW.GLFW_KEY_UNKNOWN, "Keybind to undo last placed Node.").withDependency { nodeSettings && nodePlaceKeybind }
         .onPress { sendCommand("ar undo") }
@@ -93,9 +108,17 @@ object AutoRoutes : Module(
     init {
         on<RenderEvent.Extract> {
             val room = DungeonUtils.currentRoom ?: return@on
+
+            HandleMovement.update()
+
             renderStartingPoint(room, this)
             renderEtherwarp(room, this)
             renderDungeonbreaker(room, this)
+            renderAwait(room, this)
+            renderMovement(room, this)
+            renderStopMovement(room, this)
+            renderSuperboom(room, this)
+            renderRotate(room, this)
 
             when (routeState) {
                 RouteState.IDLE -> {
@@ -114,7 +137,11 @@ object AutoRoutes : Module(
                     val now = System.currentTimeMillis()
                     when (route?.steps?.getOrNull(currentStepIndex)) {
                         is RouteStep.Etherwarp -> HandleEtherwarp.tick(now)
+                        is RouteStep.Superboom -> HandleSuperboom.tick(now)
                         is RouteStep.BreakBlock -> HandleDungeonbreaker.tick(now)
+                        is RouteStep.AwaitNode -> HandleAwait.tick(now)
+                        is RouteStep.StopMovement -> HandleStopMovement.tick(now)
+                        is RouteStep.RotateTo -> HandleRotate.tick(now)
                         else -> {}
                     }
                 }
@@ -160,6 +187,11 @@ object AutoRoutes : Module(
                     fail()
                 }
             )
+            is RouteStep.AwaitNode -> HandleAwait.execute(step, room, this, onSuccess = { advance(room) }, onFail = { fail() })
+            is RouteStep.Movement -> HandleMovement.execute(step, room, this, onSuccess = { advance(room) }, onFail = { fail() })
+            is RouteStep.StopMovement -> HandleStopMovement.execute(step, room, this, onSuccess = { advance(room) }, onFail = { fail() })
+            is RouteStep.Superboom -> HandleSuperboom.execute(step, room, this, onSuccess = { advance(room) }, onFail = { fail() })
+            is RouteStep.RotateTo -> HandleRotate.execute(step, room, this, onSuccess = { advance(room) }, onFail = { fail() })
             else -> {}
         }
     }
@@ -169,6 +201,7 @@ object AutoRoutes : Module(
         currentStepIndex = 0
         AutoRouteManager.reset()
         setCrouchState(false)
+        HandleMovement.stopMoving()
     }
 
     private fun advance(room: Room) {

@@ -3,7 +3,6 @@ package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 import com.odtheking.odin.OdinMod.mc
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.SlabBlock
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.SlabType
 
 fun SlabBlockFaceOffsets(face: String, pos: BlockPos): Triple<Double, Double, Double> {
