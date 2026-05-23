@@ -6,6 +6,7 @@ import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.superboomNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.utils.component1
@@ -41,6 +42,7 @@ object HandleSuperboom : HandleAction() {
             return
         }
 
+        if (!holdItem("SUPERBOOM_TNT")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -62,7 +64,7 @@ object HandleSuperboom : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= superboomNodeTimeout) {
             modMessage("Superboom failed due to timeout, preventing lockup")
             onFail()
         }
@@ -75,9 +77,6 @@ object HandleSuperboom : HandleAction() {
         val faceOffset = getFaceOffset(worldFace, coord)
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-
-        if (!holdItem("SUPERBOOM_TNT")) return
-
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
         if (deadzone && amILookingAtTargetBlock(coord)) {
@@ -99,7 +98,7 @@ object HandleSuperboom : HandleAction() {
                     world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                     world.x + 1.0, world.y + 1.0, world.z + 1.0
                 )
-                event.drawStyledBox(aabb, superboomNodeColor, if (superboomRenderFilled) 0 else 1, renderNodesThroughWalls)
+                event.drawStyledBox(aabb, superboomNodeColor, if (superboomNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
             }
         }
 
@@ -109,7 +108,7 @@ object HandleSuperboom : HandleAction() {
                 world.x.toDouble(), world.y.toDouble(), world.z.toDouble(),
                 world.x + 1.0, world.y + 1.0, world.z + 1.0
             )
-            event.drawStyledBox(aabb, authoringNodesColor, if (superboomRenderFilled) 0 else 1, renderNodesThroughWalls)
+            event.drawStyledBox(aabb, authoringNodesColor, if (superboomNodeRenderFilled) 0 else 1, renderNodesThroughWalls)
         }
     }
 }

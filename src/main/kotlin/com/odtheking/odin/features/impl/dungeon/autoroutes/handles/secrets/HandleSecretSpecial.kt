@@ -6,6 +6,7 @@ import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.specialNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
@@ -34,7 +35,7 @@ object HandleSecretSpecial : HandleAction() {
 
         currentStep = step
         val coord = step.target.toWorldPos(room)
-
+        if (!holdItem("DUNGEONBREAKER")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -57,7 +58,7 @@ object HandleSecretSpecial : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= specialNodeTimeout) {
             modMessage("Special timed out, skipping")
             onSuccess()
         }
@@ -70,8 +71,6 @@ object HandleSecretSpecial : HandleAction() {
         val faceOffset = getFaceOffset(worldFace, coord)
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-        if (!holdItem("DUNGEONBREAKER")) return
-
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
         if (deadzone && amILookingAtTargetBlock(coord)) {

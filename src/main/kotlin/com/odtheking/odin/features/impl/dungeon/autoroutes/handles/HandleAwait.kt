@@ -4,6 +4,7 @@ import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.events.RenderEvent
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.awaitNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.utils.modMessage
@@ -34,7 +35,7 @@ object HandleAwait : HandleAction() {
         val step = currentStep ?: return
         val room = currentRoom ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= awaitNodeTimeout) {
             modMessage("Await failed due to timeout, preventing lockup")
             onFail()
         }

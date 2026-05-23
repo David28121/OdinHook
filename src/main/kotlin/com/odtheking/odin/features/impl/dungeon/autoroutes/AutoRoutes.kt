@@ -81,7 +81,7 @@ object AutoRoutes : Module(
     var specialNodeRenderFilled by BooleanSetting("Special Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     var etherwarpNodeRenderFilled by BooleanSetting("Etherwarp Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     var dungeonbreakerNodeRenderFilled by BooleanSetting("Dungeonbreaker Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
-    var superboomRenderFilled by BooleanSetting("Superboom Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
+    var superboomNodeRenderFilled by BooleanSetting("Superboom Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     var movementRenderFilled by BooleanSetting("Movement Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     var stopMovementRenderFilled by BooleanSetting("Stop Movement Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
     var rotateRenderFilled by BooleanSetting("Rotate Filled", true, "Whether to render the node filled or not.").withDependency { nodeSettings && nodeRenderFilled }
@@ -115,6 +115,20 @@ object AutoRoutes : Module(
         .onPress { sendCommand("ar startingNode") }
     var undoNodeKeybind by KeybindSetting("Undo", GLFW.GLFW_KEY_UNKNOWN, "Keybind to undo last placed Node.").withDependency { nodeSettings && nodePlaceKeybind }
         .onPress { sendCommand("ar undo") }
+
+    private val nodeTimeout by DropdownSetting("Node Timeout").withDependency { nodeSettings }
+    var awaitNodeTimeout by NumberSetting("Await Timeout", 5000L, 0L, 5000L, 50L, "How long Await Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var chestNodeTimeout by NumberSetting("Chest Timeout", 5000L, 0L, 5000L, 50L, "How long Chest Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var leverNodeTimeout by NumberSetting("Lever Timeout", 5000L, 0L, 5000L, 50L, "How long Lever Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var itemNodeTimeout by NumberSetting("Item Timeout", 5000L, 0L, 5000L, 50L, "How long Item Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var batNodeTimeout by NumberSetting("Bat Timeout", 5000L, 0L, 5000L, 50L, "How long Bat Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var specialNodeTimeout by NumberSetting("Special Timeout", 5000L, 0L, 5000L, 50L, "How long Special Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var etherwarpNodeTimeout by NumberSetting("Etherwarp Timeout", 5000L, 0L, 5000L, 50L, "How long Etherwarp Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var dungeonbreakerNodeTimeout by NumberSetting("Dungeonbreaker Timeout", 5000L, 0L, 5000L, 50L, "How long Dungeonbreaker Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var superboomNodeTimeout by NumberSetting("Superboom Timeout", 5000L, 0L, 5000L, 50L, "How long Superboom Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var stopMovementNodeTimeout by NumberSetting("Stop Movement Timeout", 5000L, 0L, 5000L, 50L, "How long Stop Movement Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+    var rotateNodeTimeout by NumberSetting("Rotate Timeout", 5000L, 0L, 5000L, 50L, "How long Rotate Timeout should take.").withDependency { nodeSettings && nodeTimeout }
+
     var etherwarpNodeRenderLines by BooleanSetting("Etherwarp Lines", true, "Whether to render lines to Etherwarp Nodes").withDependency { nodeSettings }
 
 

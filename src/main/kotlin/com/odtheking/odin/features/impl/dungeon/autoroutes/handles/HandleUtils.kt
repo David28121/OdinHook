@@ -3,10 +3,12 @@ package com.odtheking.odin.features.impl.dungeon.autoroutes.handles
 import com.odtheking.odin.OdinMod.mc
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.SlabBlock
 import net.minecraft.world.level.block.state.properties.AttachFace
 import net.minecraft.world.level.block.state.properties.SlabType
+import net.minecraft.world.phys.AABB
 
 fun SlabBlockFaceOffsets(face: String, pos: BlockPos): Triple<Double, Double, Double> {
     val level = mc.level
@@ -92,4 +94,15 @@ fun ChestBlockFaceOffsets(face: String): Triple<Double, Double, Double> {
         "DOWN"  -> Triple(0.5, 0.0, 0.5)
         else    -> Triple(0.5, 0.5, 0.5)
     }
+}
+
+fun <T : Entity> checkForMobInRange(range: Double, entityClass: Class<T>): Boolean {
+    val player = mc.player ?: return false
+    val pos = player.getPosition(1f)
+    val level = mc.level ?: return false
+    val searchBox = AABB(
+        pos.x - range, pos.y - range, pos.z - range,
+        pos.x + range, pos.y + range, pos.z + range
+    )
+    return level.getEntitiesOfClass(entityClass, searchBox).isNotEmpty()
 }

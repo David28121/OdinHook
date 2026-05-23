@@ -6,6 +6,7 @@ import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.etherwarpNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.features.impl.render.Etherwarp
@@ -57,6 +58,7 @@ object HandleEtherwarp : HandleAction() {
             return
         }
 
+        if (!holdItem("ASPECT_OF_THE_VOID")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -83,7 +85,7 @@ object HandleEtherwarp : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= etherwarpNodeTimeout) {
             modMessage("Etherwarp failed due to timeout, preventing lockup")
             onFail()
         }
@@ -98,9 +100,6 @@ object HandleEtherwarp : HandleAction() {
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
 
         val player = mc.player ?: return
-
-        if (!holdItem("ASPECT_OF_THE_VOID")) return
-
         if (player.pose != Pose.CROUCHING) setCrouchState(true)
 
         // -0.27 is to account for shitty 1.14+ crouch height and aiming cause im lazy

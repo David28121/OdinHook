@@ -5,6 +5,7 @@ import com.odtheking.odin.events.SecretPickupEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.itemNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
@@ -41,7 +42,7 @@ object HandleSecretItem : HandleAction() {
     fun tick(now: Long) {
         if (!isExecuting) return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= itemNodeTimeout) {
             modMessage("Item timed out, skipping")
             onSuccess()
         }

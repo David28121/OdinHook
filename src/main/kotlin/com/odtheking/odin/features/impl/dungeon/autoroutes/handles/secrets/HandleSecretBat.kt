@@ -5,8 +5,10 @@ import com.odtheking.odin.events.SecretPickupEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.batNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
+import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.checkForMobInRange
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.utils.component1
 import com.odtheking.odin.utils.component2
@@ -15,6 +17,7 @@ import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.rightClick
 import com.odtheking.odin.utils.skyblock.dungeon.tiles.Room
+import net.minecraft.world.entity.ambient.Bat
 import net.minecraft.world.phys.AABB
 
 object HandleSecretBat : HandleAction() {
@@ -33,6 +36,7 @@ object HandleSecretBat : HandleAction() {
 
         currentStep = step
         val coord = step.target.toWorldPos(room)
+        if (!holdItem("HYPERION")) {modMessage("No hype found") ; return} // for now you have to have a hype will add more methods later :p
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -49,7 +53,7 @@ object HandleSecretBat : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= batNodeTimeout) {
             modMessage("Bat timed out, skipping")
             onSuccess()
         }
@@ -61,8 +65,9 @@ object HandleSecretBat : HandleAction() {
         val faceOffset = getFaceOffset(pos = coord) // you hype the floor so no face defaults to TOP anyways
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-        if (!holdItem("HYPERION")) {modMessage("No hype found") ; return} // for now you have to have a hype will add more methods later :p
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
+
+        if (!checkForMobInRange(8.0, Bat::class.java)) return
 
         if (deadzone && amILookingAtTargetBlock(coord)) {
             if (!attemptedAction) {

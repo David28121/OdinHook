@@ -7,6 +7,7 @@ import com.odtheking.odin.events.core.onSend
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.dungeonbreakerNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
 import com.odtheking.odin.utils.component1
@@ -42,6 +43,7 @@ object HandleDungeonbreaker : HandleAction() {
             return
         }
 
+        if (!holdItem("DUNGEONBREAKER")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -69,7 +71,7 @@ object HandleDungeonbreaker : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= dungeonbreakerNodeTimeout) {
             modMessage("Dungeonbreaker failed due to timeout, preventing lockup")
             onFail()
         }
@@ -82,9 +84,6 @@ object HandleDungeonbreaker : HandleAction() {
         val faceOffset = getFaceOffset(worldFace, coord)
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-
-        if (!holdItem("DUNGEONBREAKER")) return
-
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
         if (deadzone && amILookingAtTargetBlock(coord)) {

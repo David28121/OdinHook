@@ -5,6 +5,7 @@ import com.odtheking.odin.events.SecretPickupEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.leverNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
@@ -33,7 +34,7 @@ object HandleSecretLever : HandleAction() {
 
         currentStep = step
         val coord = step.target.toWorldPos(room)
-
+        if (!holdItem("DUNGEONBREAKER")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -55,7 +56,7 @@ object HandleSecretLever : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= leverNodeTimeout) {
             modMessage("Lever timed out, skipping")
             onSuccess()
         }
@@ -67,8 +68,6 @@ object HandleSecretLever : HandleAction() {
         val faceOffset = getFaceOffset(pos = coord) // gulp poor code quality strikes again lol prob could remove lever logic from this and just call the function directly...
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
-        if (!holdItem("DUNGEONBREAKER")) return
-
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
 
         if (deadzone && amILookingAtTargetBlock(coord)) {

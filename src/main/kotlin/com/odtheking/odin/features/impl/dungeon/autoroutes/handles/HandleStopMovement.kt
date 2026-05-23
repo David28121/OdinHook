@@ -4,6 +4,7 @@ import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.events.RenderEvent
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.stopMovementNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleMovement.stopMoving
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
@@ -35,7 +36,7 @@ object HandleStopMovement: HandleAction() {
         val step = currentStep ?: return
         val room = currentRoom ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= stopMovementNodeTimeout) {
             modMessage("Stop Movement failed due to timeout, preventing lockup")
             stopMoving()
             onFail()

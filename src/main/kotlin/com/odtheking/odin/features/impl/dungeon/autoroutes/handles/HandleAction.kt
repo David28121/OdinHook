@@ -160,8 +160,8 @@ abstract class HandleAction {
         val player = mc.player ?: return false
         val hit = level.clip(
             ClipContext(
-                player.getEyePosition(1f),
-                player.getEyePosition(1f).add(player.lookAngle.scale(4.5)), //4.5 to account for shitty desync eventually update to use server position
+                player.getEyePosition(0f),
+                player.getEyePosition(0f).add(player.lookAngle.scale(4.5)), //4.5 to account for shitty desync eventually update to use server position
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
                 player

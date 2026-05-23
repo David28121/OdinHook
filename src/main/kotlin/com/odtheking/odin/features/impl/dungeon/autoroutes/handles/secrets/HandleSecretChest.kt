@@ -7,6 +7,7 @@ import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRouteManager.rotateFaceFromNorth
 import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes
+import com.odtheking.odin.features.impl.dungeon.autoroutes.AutoRoutes.chestNodeTimeout
 import com.odtheking.odin.features.impl.dungeon.autoroutes.RouteStep
 import com.odtheking.odin.features.impl.dungeon.autoroutes.handles.HandleAction
 import com.odtheking.odin.features.impl.dungeon.autoroutes.toWorldPos
@@ -37,7 +38,7 @@ object HandleSecretChest : HandleAction() {
 
         currentStep = step
         val coord = step.target.toWorldPos(room)
-
+        if (!holdItem("DUNGEONBREAKER")) return
         baseExecute(room, module, coord, onSuccess, onFail)
     }
 
@@ -60,7 +61,7 @@ object HandleSecretChest : HandleAction() {
         val room = currentRoom ?: return
         val module = currentModule ?: return
 
-        if (now - delayStartTime >= 5000L) {
+        if (now - delayStartTime >= chestNodeTimeout) {
             modMessage("Chest timed out, skipping")
             onSuccess()
         }
@@ -74,7 +75,6 @@ object HandleSecretChest : HandleAction() {
 
         val (tx, ty, tz) = getFinalTargetCoords(coord, faceOffset)
         val player = mc.player ?: return
-        if (!holdItem("DUNGEONBREAKER")) return
         if (player.pose != Pose.CROUCHING) setCrouchState(true)
 
         val deadzone = rotateToward(tx, ty, tz, module, deltaTime)
